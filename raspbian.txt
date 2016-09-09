@@ -1,0 +1,146 @@
+  _________________________________________________________________________________________
+ |                                                                                         |
+ |THIS GUIDE ASSUMES YOU HAVE ACCES TO A LINUX COMPUTER,INTERNET AND A MICRO SD CARD READER|
+ |_________________________________________________________________________________________|
+
+ 0.1 The Requirements
+ --------------------
+
+ - Raspberry pi
+ - microSD card
+ - HDMI screen
+ - Ethernet cable
+ - Keyboard
+
+ 0.2 Instructions
+ --------------------
+
+ First download the latest minimal raspbian distro from the official website.
+
+ https://www.raspberrypi.org/downloads/
+
+ Make sure to check the hash of the downloaded file against the one showed on the raspbian servers.
+
+ sha1sum *-raspbian-jessie-lite.zip
+
+ Install the latest raspbian distribution on the microSD card.
+
+ https://www.raspberrypi.org/documentation/installation/installing-images/README.md
+
+ After you are done installing, unplug the microSD card from the card reader and plug it over to the raspberry pi of choice.
+
+  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ |DO NOT attach the ethernet cable yet as you did not yet configure the right iptables and ssh settings!|
+  ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+ Plug the power supply in to the raspberry pi and attach the HDMI cable and keyboard.
+
+ Once booted into the freshly installed OS login with the following username and password:
+
+ username: pi
+ password: raspberry
+
+ Don't bother to change these as it is not of your concern.
+
+ First type in raspi-config to enter the rasppbery pi configuration menu --> advanced and disable SSH.
+
+ Do a reboot using sudo reboot -f and wait untill the board is back online.
+
+ You can check if the ssh deamon has been disabled by looking at systemctl status sshd.service, it should read disabled.
+
+ sudo iptables -S to view the current iptables rules, you are most likely to be greeted with the following statements:
+
+ IPTABLES -P INPUT ALLOW
+ IPTABLES -P OUTPUT ALLOW
+ IPTABLES -P FORWARD ALLOW
+
+ Change the iptables settings with the following two commands to be safe from inbound attacks
+
+ sudo iptables -P INPUT DROP
+ sudo iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+ NOTE: Since we are not making these rules persistant you need to manually add these on every reboot.
+
+ Then go ahead and plug in the ethernet cable.
+
+ The first thing you can do is to use sudo apt-get update && sudo apt-get upgrade to update the mirrors and upgrade the distribution.
+
+ 0.3 The installation
+ --------------------
+
+ Now go ahead and install links using sudo apt-get install links.
+
+ Use links to go to the v.cash website to install vcash from john-conner's github page.
+
+ Git clone the following repository onto the raspberry pi and cd into the directory.
+
+ git clone https://github.com/john-connor/vcash-scripts/blob/master/build-linux.sh
+ cd vcash-scripts
+
+ Read the README.md file in order to prepare the raspberry pi for an installation of vcash using nano or vi.
+
+ nano README.md
+
+ Follow the instructions in the README.md and install the required dependencies.
+
+ When you are done installing the dependencies, execute the install script using ./build-linux.sh and let the raspberry pi compile.
+
+ ./build-linux.sh
+
+ The process takes about one hour to complete on a Raspberry Pi 2, so go make yourself a cup of coffee.
+
+ Once the raspberry pi has finished compiling you can safely unplug the ethernet cable from it.
+
+ You now have a little cold machine relativly safe from outside attacks.
+  _______________________________________________________________________________________________________________________
+ |                                                                                                                       |
+ |  ! NEVER EVER PLUG BACK IN THE ETHERNET CABLE AFTER YOU HAVE SUCCESFULLY DOWNLOADED AND INSTALLED THE VCASH WALLET    |
+ |_______________________________________________________________________________________________________________________|
+
+ 0.4 The wallet
+ -------------------
+ Tip: Use screen to perform multitasking on the raspberry pi!
+
+ You can easily create or delete a wallet by running ./vcashd and deleting the wallet directory.
+
+ Make sure once you have a wallet address that satisfies you, you backup the wallet.dat file by cp it into another directory in case you exidentally write over it.
+
+ You can now either do a privkeydump and past it into a text document and hand write it down on a piece of paper in case of the unlikely even the microSD card fails.
+
+ Once you have a xvc wallet addres you can transfer funds to it from you hot wallet for a safe storage of your vcash.
+
+ Two little tricks to make sure you transfer the amount of vcash to the right address:
+
+ - perform a hexdump of a text file containing the address and reverse hex it on the computer with the hot wallet.
+ - create a hash of the text file containing only the public key (address) that was copied from the output give by the curl command and compare it on the computer you are transfering from
+
+ Create a textfile containing nothing more then the wallet address from the standard linux commands.
+
+ curl --data-binary '{"jsonrpc": "1.0", "id":"123", "method": "getincentiveinfo", "params": [] }' -H 'content-type: text/plain;'
+ http://127.0.0.1:9195/ > xvcwallet.text
+
+ then open xvcwallet.text in nano/vi and remove the excessive output other then the wallet address in plain text like so:
+
+ Vm97M6Aryyfpdj3xA2FHq99FGZadMVsTkFPoloniex (make sure there are no other spaces and characters left in the text file other then the
+ address)
+
+ ex: xxd -ps xvcwallet.text --> string of numbers
+     xxd -ps -r string of numbers --> xvcwallet.text
+
+ Once you have copied the address onto the computer with the hot wallet you can verify if it matches with the one on the cold device.
+
+ ex: sha256sum xvcwallet.text --> hash value a [on the raspberry pi]
+     sha256sum xvcwallet.text --> hash value b [on the computer with the hot wallet]
+
+ Make sure hash value a and hash value b are the same before you hit the send button!
+
+ 0.5 The vault
+ -------------------
+
+ Now you have a microSD card that has both the raspbian OS, your XVC wallet.dat and software.
+
+ You can now safely unplug the microSD card from the raspberry pi and place it in a vault or bring it to a bank.
+
+ Whenever you want to transfer the funds to another XVC addres, simply bring back online the raspberry pi by plugging the microSD card and turning it on.
+
+ The only difference now is that you will have to sync the blockchain in order for you to transfer out the amount of XVC you want and leave the ethernet cable plugged in.
